@@ -1,0 +1,39 @@
+services:
+
+  app:
+    build: .
+    ports:
+      - "8001:8001"
+    environment:
+      - DATABASE__USER=mds
+      - DATABASE__PASSWORD=mds
+      - DATABASE__NAME=mds
+      - DATABASE__HOST=mysql_db
+      - DATABASE__PORT=3306
+      - DATABASE__AUTH_PLUGIN=caching_sha2_password
+      - DATABASE__DRIVER=mysql+mysqlconnector
+    depends_on:
+      mysql_db:
+        condition: service_healthy
+    restart: unless-stopped
+
+  mysql_db:
+    image: mysql:8.0
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: mds
+      MYSQL_DATABASE: mds
+      MYSQL_USER: mds
+      MYSQL_PASSWORD: mds
+    ports:
+      - "3307:3306"
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-pmds"]
+      interval: 3s
+      timeout: 3s
+      retries: 10
+    volumes:
+      - mysql_data:/var/lib/mysql
+
+volumes:
+  mysql_data:
